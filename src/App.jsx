@@ -1,7 +1,7 @@
 import Header from "./components/header/header";
 import Body from "./components/body/body";
 import { DashboardContext } from "./components/context";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 
 function App() {
@@ -15,12 +15,24 @@ function App() {
     choices: { fa: "", jp: "選択" },
   });
   const [pickedLanguage, setPickedLanguage] = useState("allSelected");
+  const [openAddOrEdit, setOpenAddOrEdit] = useState(false);
+  const [editData, setEditData] = useState(null);
   const contextValue = {
     wordList: translateList,
     pickedLanguage,
     setPickedLanguage,
     setWordList: setTranslateList,
+    openAddOrEdit,
+    setOpenAddOrEdit,
+    setEditData,
+    editData,
   };
+
+  useEffect(() => {
+    const savedData = localStorage.getItem("wordList");
+    const initialData = savedData && JSON.parse(savedData);
+    setTranslateList(initialData);
+  }, []);
 
   return (
     <DashboardContext.Provider value={contextValue}>

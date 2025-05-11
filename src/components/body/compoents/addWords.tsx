@@ -1,4 +1,8 @@
-import { Language, TranslateWordsType } from "@/components/context";
+import {
+  EditDataType,
+  Language,
+  TranslateWordsType,
+} from "@/components/context";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,20 +15,42 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface AddWordsProps {
   setWordList: Dispatch<SetStateAction<TranslateWordsType>>;
+  openAddOrEdit: boolean;
+  setOpenAddOrEdit: Dispatch<SetStateAction<boolean>>;
+  editData: EditDataType | null;
+  setEditData: Dispatch<SetStateAction<EditDataType | null>>;
 }
 
-export function AddWords({ setWordList }: AddWordsProps) {
+const primaryButtonClass =
+  "bg-[#3762e5] text-white hover:bg-blue-500 hover:text-white";
+
+export function AddWords({
+  setWordList,
+  setOpenAddOrEdit,
+  openAddOrEdit,
+  editData,
+  setEditData,
+}: AddWordsProps) {
   const [formData, setFormData] = useState({
     keyword: "",
     persian: "",
     japanese: "",
   });
-  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (editData && editData.keyWord) {
+      setFormData({
+        keyword: editData?.keyWord,
+        persian: editData?.[Language.FARSI],
+        japanese: editData?.[Language.JAPANESE],
+      });
+    }
+  }, [editData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -35,42 +61,78 @@ export function AddWords({ setWordList }: AddWordsProps) {
   };
 
   const handleSubmit = () => {
-    if (!formData.keyword.trim()) {
-      toast.error("Please enter a keyword");
-      return;
+    if (!editData) {
+      if (!formData.keyword.trim()) {
+        toast.error("Please enter a keyword");
+        return;
+      }
+
+      if (!formData.persian.trim() && !formData.japanese.trim()) {
+        toast.error(
+          "Please enter at least one translation (Persian or Japanese)"
+        );
+        return;
+      }
+
+      setWordList((prev) => {
+        const updated = {
+          ...prev,
+          [formData.keyword]: {
+            [Language.FARSI]: formData.persian,
+            [Language.JAPANESE]: formData.japanese,
+            [Language.ALL]: formData.keyword,
+          },
+        };
+
+        localStorage.setItem("wordList", JSON.stringify(updated));
+        return updated;
+      });
+
+      toast.success("Translation added successfully!");
+      setFormData({
+        keyword: "",
+        persian: "",
+        japanese: "",
+      });
+    } else {
+      setWordList((prev) => {
+        const oldEntries = Object.entries(prev);
+        const oldKeyWord = editData.keyWord;
+
+        const newValue = {
+          [Language.FARSI]: formData.persian,
+          [Language.JAPANESE]: formData.japanese,
+          [Language.ALL]: formData.keyword,
+        };
+
+        const updatedEntries = oldEntries.flatMap(([key, value]) =>
+          key === oldKeyWord ? [[formData.keyword, newValue]] : [[key, value]]
+        );
+
+        const updatedObject = Object.fromEntries(updatedEntries);
+
+        localStorage.setItem("wordList", JSON.stringify(updatedObject));
+
+        return updatedObject;
+      });
+      toast.success("Translation edited successfully!");
+      setFormData({
+        keyword: "",
+        persian: "",
+        japanese: "",
+      });
+      setEditData(null);
     }
 
-    if (!formData.persian.trim() && !formData.japanese.trim()) {
-      toast.error(
-        "Please enter at least one translation (Persian or Japanese)"
-      );
-      return;
-    }
-
-    setWordList((prev) => ({
-      ...prev,
-      [formData.keyword]: {
-        [Language.FARSI]: formData.persian,
-        [Language.JAPANESE]: formData.japanese,
-        [Language.ALL]: formData.keyword,
-      },
-    }));
-
-    toast.success("Translation added successfully!");
-    setFormData({
-      keyword: "",
-      persian: "",
-      japanese: "",
-    });
-    setOpen(false);
+    setOpenAddOrEdit(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={openAddOrEdit} onOpenChange={setOpenAddOrEdit}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="mt-4 w-full bg-[#3762e5] text-white hover:bg-blue-500 hover:text-white"
+          className={`mt-4 w-full mb-4 ${primaryButtonClass}`}
         >
           + Add keyWord
         </Button>
@@ -122,10 +184,7 @@ export function AddWords({ setWordList }: AddWordsProps) {
           </div>
         </div>
         <DialogFooter>
-          <Button
-            onClick={handleSubmit}
-            className="bg-[#3762e5] text-white hover:bg-blue-500 hover:text-white"
-          >
+          <Button onClick={handleSubmit} className={primaryButtonClass}>
             Save changes
           </Button>
         </DialogFooter>
