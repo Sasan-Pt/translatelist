@@ -10,12 +10,12 @@ const Body = () => {
     return null;
   }
 
-  const { wordList, pickedLanguage } = context;
+  const { wordList, pickedLanguage, setWordList } = context;
 
   return (
     <>
       <TranslatedLists wordList={wordList} pickedLanguage={pickedLanguage} />
-      <AddWords />
+      <AddWords setWordList={setWordList} />
     </>
   );
 };

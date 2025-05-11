@@ -35,10 +35,18 @@ const TranslatedLists = ({
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <div className="bg-[#f9f9f9] px-6 py-1 rounded-sm flex justify-center items-center">
+                <div
+                  className={`${
+                    !translations[Language.FARSI] && "hidden"
+                  } bg-[#f9f9f9] px-6 py-1 rounded-sm flex justify-center items-center`}
+                >
                   {translations[Language.FARSI]}
                 </div>
-                <div className="bg-[#f9f9f9] px-6 py-1 rounded-sm flex justify-center items-center">
+                <div
+                  className={`${
+                    !translations[Language.JAPANESE] && "hidden"
+                  } bg-[#f9f9f9] px-6 py-1 rounded-sm flex justify-center items-center`}
+                >
                   {translations[Language.JAPANESE]}
                 </div>
               </div>
