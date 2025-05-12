@@ -31,6 +31,7 @@ const TranslatedLists = ({
   const handleDelete = (keyToDelete: string) => {
     setWordList((prev) => {
       const { [keyToDelete]: _, ...rest } = prev;
+      localStorage.setItem("wordList", JSON.stringify(rest));
       return rest;
     });
   };
